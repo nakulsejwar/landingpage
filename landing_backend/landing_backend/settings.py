@@ -87,11 +87,16 @@ WSGI_APPLICATION = 'landing_backend.wsgi.application'
         }
     }
 }'''
+
+
+import os
+from dotenv import load_dotenv
 import dj_database_url
 
+load_dotenv()
 DATABASES = {
     "default": dj_database_url.parse(
-        "postgresql://postgres:qiz3xBAOZ4bd1bC5@db.cdqyxpdxbnuehopnotnk.supabase.co:5432/postgres"
+        os.getenv("DATABASE_URL")
     )
 }
 REST_FRAMEWORK = {
