@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-cbod$($+0w(*i9^$v#2-a#7u8o5^((@*o+xrrpy^84!4$xjr2p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "landingpage-three-mocha.vercel.app",
+    ".vercel.app",
+    "127.0.0.1",
+    "localhost",
+]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
