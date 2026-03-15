@@ -19,6 +19,11 @@ certifi==2024.7.4
 google-generativeai==0.8.5
 google-auth==2.31.0
 
+pydantic==2.8.2
+pydantic-core==2.20.1
+annotated-types==0.7.0
+typing-extensions==4.12.2
+
 gunicorn==22.0.0
 whitenoise==6.7.0
 
@@ -26,6 +31,11 @@ sqlparse==0.5.1
 asgiref==3.8.1
 
 h11==0.14.0
+httpcore==1.0.5
+httpx==0.27.0
+anyio==4.4.0
+sniffio==1.3.1
+
+orjson==3.10.7
 packaging==24.1
 six==1.16.0
-typing-extensions==4.12.2
