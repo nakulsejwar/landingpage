@@ -1,13 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, prefer-const, react-hooks/exhaustive-deps, @next/next/no-img-element */
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
 import * as Babel from "@babel/standalone";
 import { toast } from "sonner";
+import { FallbackSection } from "../../../lib/fallback-section";
 
 interface Props {
   code: string;
   editable: boolean;
   onCodeChange: (code: string) => void;
+  assets?: Record<string, unknown>;
+  strategy?: Record<string, unknown>;
   categories?: any[];
   products?: any[];
   sectionName: string; // 🚀 ADDED
@@ -17,6 +21,8 @@ export default function DynamicSectionEditor({
   code,
   editable,
   onCodeChange,
+  assets = {},
+  strategy = {},
   categories = [],
   products = [],
   sectionName,        // 🚀 ADDED
@@ -32,6 +38,9 @@ export default function DynamicSectionEditor({
   };
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [stockQuery, setStockQuery] = useState("");
+  const [stockResults, setStockResults] = useState<any[]>([]);
+  const [isSearchingStock, setIsSearchingStock] = useState(false);
   const BRAND_PALETTE = [
     "#ffffff", "#f8fafc", "#1e293b", "#4f46e5", "#ec4899", 
     "#e11d48", "#10b981", "#f59e0b", "#000000"
@@ -359,6 +368,76 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       setIsGenerating(false);
     }
   };
+  const applyImageUrl = (assetUrl: string) => {
+    if (!selection) return;
+
+    setDraft((prev) => {
+      let updatedCode = prev;
+      let count = -1;
+
+      if (selection.tag === "img") {
+        const imgRegex = /<img[^>]*src=["']([^"']*)["'][^>]*>/gi;
+        updatedCode = prev.replace(imgRegex, (match) => {
+          count++;
+          const newSrc = 'src="' + assetUrl + '"';
+          return count === selection.index
+            ? match.replace(/src=["']([^"']*)["']/, newSrc)
+            : match;
+        });
+      } else {
+        const wrapperRegex = /(<div[^>]*className=[\"'])([^\"']*?)([\"'])/i;
+        updatedCode = prev.replace(wrapperRegex, (match, open, classString, close) => {
+          let classes = classString
+            .split(/\s+/)
+            .filter((c: string) =>
+              !c.startsWith("bg-[") &&
+              !c.startsWith("bg-cover") &&
+              !c.startsWith("bg-center") &&
+              !c.startsWith("bg-gray") &&
+              !c.startsWith("bg-white")
+            );
+
+          const bgClass = "bg-[url('" + assetUrl + "')]";
+          classes.push(bgClass, "bg-cover", "bg-center");
+
+          return open + classes.join(" ") + close;
+        });
+      }
+
+      if (updatedCode !== prev) onCodeChange(updatedCode);
+      return updatedCode;
+    });
+  };
+  const searchStockImages = async () => {
+    if (!stockQuery.trim()) {
+      toast.error("Add a stock image query");
+      return;
+    }
+
+    setIsSearchingStock(true);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}stock-images/?query=${encodeURIComponent(stockQuery)}`
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Stock search failed");
+      }
+
+      setStockResults(Array.isArray(data.results) ? data.results : []);
+
+      if (!data.results?.length && data.hint) {
+        toast.message(data.hint);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Stock image search failed");
+    } finally {
+      setIsSearchingStock(false);
+    }
+  };
 const updateImageOverlay = (type: 'color' | 'opacity', value: string) => {
   setDraft((currentCode: string) => {
     // 1. Target only the FIRST div (the section wrapper)
@@ -654,11 +733,20 @@ const handlePreviewClick = (e: React.MouseEvent) => {
       const transformed = Babel.transform(cleaned, {
         filename: "section.tsx", presets: ["react", "typescript"], plugins: ["transform-modules-commonjs"],
       }).code as string;
-      const fn = new Function("React", "exports", `const { useState, useEffect, useMemo, useRef } = React; ${transformed}; return exports.default;`);
+      const fn = new Function(
+        "React",
+        "exports",
+        "IMAGE_ASSETS",
+        "SECTION_STRATEGY",
+        `const { useState, useEffect, useMemo, useRef } = React; ${transformed}; return exports.default;`
+      );
       const exports = { default: null };
-      return fn(React, exports);
-    } catch (e) { return null; }
-  }, [draft]);
+      return fn(React, exports, assets, strategy);
+    } catch (e) {
+      console.error("DynamicSectionEditor Error:", e);
+      return null;
+    }
+  }, [draft, assets, strategy]);
 
   return (
     <div data-editor-wrapper>
@@ -770,7 +858,7 @@ const handlePreviewClick = (e: React.MouseEvent) => {
           {allowedControls.includes("image") && (
             <div className="flex flex-col gap-2 border-r border-slate-700 pr-5 flex-shrink-0">
               <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest italic mb-1">
-                Image Upload
+                Image Studio
               </span>
 
               <div className="flex flex-row items-start gap-6">
@@ -835,6 +923,45 @@ const handlePreviewClick = (e: React.MouseEvent) => {
                       {isGenerating ? "GENERATING..." : "✨ GENERATE WITH AI"}
                     </button>
                   </div>
+                </div>
+
+                <div className="flex min-w-[220px] flex-col gap-2 border-l border-slate-800 pl-6">
+                  <textarea
+                    value={stockQuery}
+                    onChange={(e) => setStockQuery(e.target.value)}
+                    placeholder="Search royalty-free images..."
+                    className="text-[10px] p-2 bg-slate-900 border border-slate-700 rounded resize-none w-56 h-[68px] focus:border-cyan-500 outline-none"
+                  />
+
+                  <button
+                    onClick={searchStockImages}
+                    disabled={isSearchingStock}
+                    className="text-[9px] font-bold bg-cyan-600 text-white py-1.5 rounded hover:brightness-110 disabled:opacity-50 transition-all"
+                  >
+                    {isSearchingStock ? "SEARCHING..." : "Find royalty-free"}
+                  </button>
+
+                  {stockResults.length > 0 && (
+                    <div className="grid max-h-36 grid-cols-2 gap-2 overflow-auto rounded border border-slate-800 bg-slate-950/80 p-2">
+                      {stockResults.slice(0, 4).map((item, index) => (
+                        <button
+                          key={`${item.url}-${index}`}
+                          onClick={() => applyImageUrl(item.url)}
+                          className="overflow-hidden rounded border border-slate-700 text-left transition hover:border-cyan-400"
+                          title={item.alt || "Stock image"}
+                        >
+                          <img
+                            src={item.thumbnail || item.url}
+                            alt={item.alt || "Stock image"}
+                            className="h-16 w-full object-cover"
+                          />
+                          <div className="p-1 text-[8px] text-slate-300">
+                            {item.provider}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
               </div>
@@ -1116,7 +1243,11 @@ const handlePreviewClick = (e: React.MouseEvent) => {
             {Component ? (
               <Component categories={categories} products={products} />
             ) : (
-              <div className="p-20 text-center text-slate-400 italic">Updating...</div>
+              <FallbackSection
+                name={sectionName}
+                assets={assets}
+                strategy={strategy}
+              />
             )}
           </div>
         )}

@@ -12,7 +12,6 @@ class LandingPage(models.Model):
 
     title = models.CharField(max_length=200)
     prompt = models.TextField()
-
     section_order = models.JSONField(default=list)
 
     created_at = models.DateTimeField(auto_now_add=True)

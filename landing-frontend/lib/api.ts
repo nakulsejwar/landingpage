@@ -1,4 +1,24 @@
 
+export async function parseApiResponse<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  const isJson = (res.headers.get("content-type") || "").includes("application/json");
+
+  if (!isJson) {
+    throw new Error(text?.slice(0, 200) || `Request failed with status ${res.status}`);
+  }
+
+  const data = JSON.parse(text) as T;
+
+  if (!res.ok) {
+    const message =
+      (data as { error?: string; detail?: string })?.error ||
+      (data as { error?: string; detail?: string })?.detail ||
+      `Request failed with status ${res.status}`;
+    throw new Error(message);
+  }
+
+  return data;
+}
 
 export async function getLanding(pageId: string) {
 
@@ -10,5 +30,5 @@ export async function getLanding(pageId: string) {
     `${process.env.NEXT_PUBLIC_API_URL}page/${pageId}/`
   );
 
-  return res.json();
+  return parseApiResponse(res);
 }

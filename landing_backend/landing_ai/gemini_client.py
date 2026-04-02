@@ -1,4 +1,3 @@
-import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -7,6 +6,12 @@ _model = None
 
 
 def get_llm():
+    try:
+        import google.generativeai as genai
+    except ImportError as exc:  # pragma: no cover
+        raise RuntimeError(
+            "google-generativeai is not installed. Install backend requirements to use AI generation."
+        ) from exc
 
     global _model
 

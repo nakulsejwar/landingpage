@@ -1,81 +1,29 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import LandingRenderer from "../../components/LandingRenderer";
 import Loading from "./loading";
-
-const DynamicSection = dynamic(
-  () => import("./DynamicSection"),
-  { ssr: false }
-);
+import { parseApiResponse } from "../../../lib/api";
+import type { LandingPageResponse } from "../../../lib/landing";
 
 export default function Page() {
-
   const params = useParams();
   const pageId = params.pageId as string;
-
-  const [data, setData] = useState<any>(null);
-  const [isReady, setIsReady] = useState(false);
-  const [sectionOrder, setSectionOrder] = useState<string[]>([]);
+  const [data, setData] = useState<LandingPageResponse | null>(null);
 
   useEffect(() => {
-
     if (!pageId) return;
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL}page/${pageId}/`)
-      .then(res => res.ok ? res.json() : null)
-      .then(json => {
-
-        if (!json) return;
-
-        setData(json);
-
-        const order =
-          json.section_order ||
-          Object.keys(json.sections || {});
-
-        setSectionOrder(order);
-
+      .then((res) => parseApiResponse<LandingPageResponse>(res))
+      .then(setData)
+      .catch((err) => {
+        console.error(err);
       });
-
-    if (!document.getElementById("tailwind-cdn")) {
-
-      const script = document.createElement("script");
-      script.id = "tailwind-cdn";
-      script.src = "https://cdn.tailwindcss.com";
-      script.onload = () => setIsReady(true);
-
-      document.head.appendChild(script);
-
-    } else {
-      setIsReady(true);
-    }
-
   }, [pageId]);
 
-  if (!isReady || !data) return <Loading />;
+  if (!data) return <Loading />;
 
-  const sections = data.sections || {};
-
-  return (
-    <main>
-
-      {sectionOrder.map((key) => {
-
-        const section = sections[key];
-
-        if (!section?.code) return null;
-
-        return (
-          <DynamicSection
-            key={key}
-            code={section.code}
-          />
-        );
-
-      })}
-
-    </main>
-  );
+  return <LandingRenderer page={data} />;
 }

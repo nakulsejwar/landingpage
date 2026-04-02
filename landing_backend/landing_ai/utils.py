@@ -41,3 +41,15 @@ def strip_return_component(code: str):
         code,
         flags=re.IGNORECASE
     )
+
+
+def sanitize_generated_code(code: str):
+    if not isinstance(code, str):
+        return code
+
+    cleaned = strip_return_component(code)
+    cleaned = cleaned.replace("<style>{{`", "<style>{`")
+    cleaned = cleaned.replace("`}}</style>", "`}</style>")
+    cleaned = cleaned.replace("export default ", "")
+    cleaned = re.sub(r'^\s*import .*?;\s*$', '', cleaned, flags=re.MULTILINE)
+    return cleaned.strip()
