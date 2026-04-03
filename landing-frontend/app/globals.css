@@ -33,8 +33,15 @@ body {
 }
 
 .generator-panel {
-  transform: perspective(1600px) rotateX(6deg) rotateY(-8deg);
+  transform: none;
   transform-style: preserve-3d;
+}
+
+/* Apply tilt only on large screens */
+@media (min-width: 1024px) {
+  .generator-panel {
+    transform: perspective(1600px) rotateX(6deg) rotateY(-8deg);
+  }
 }
 
 .hero-aurora {
