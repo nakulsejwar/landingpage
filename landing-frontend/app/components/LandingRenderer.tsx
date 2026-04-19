@@ -526,7 +526,7 @@ function Header({ d, brand, ctx }: { d: Rec; brand: string; ctx: TC }) {
 
   const logo = <div style={{display:"flex",alignItems:"center",gap:9}}>
     {!isBrut && <div style={{width:30,height:30,borderRadius:isNeon?"6px":"8px",background:`linear-gradient(135deg,${acc},${hi})`,boxShadow:isNeon?`0 0 20px ${acc}77`:"none"}} />}
-    <span style={{fontSize:isBrut?"18px":"17px",fontWeight:700,fontFamily:"var(--fh)",..( isBrut?{borderBottom:`2px solid ${acc}`}:{}),..( isNeon?{textShadow:`0 0 20px ${acc}88`}:{})}}>{brand}</span>
+    <span style={{fontSize:isBrut?"18px":"17px",fontWeight:700,fontFamily:"var(--fh)",...( isBrut?{borderBottom:`2px solid ${acc}`}:{}),...( isNeon?{textShadow:`0 0 20px ${acc}88`}:{})}}>{brand}</span>
   </div>;
 
   // ── v1: glass (scrolled bg)
@@ -692,7 +692,7 @@ function Hero({ d, brand, tagline, ctx }: { d: Rec; brand: string; tagline: stri
     <a href="#contact" className={isBrut?"bb":"btn-primary gbtn"} style={isBrut?{}:{background:`linear-gradient(135deg,${acc},${hi})`,color:"#000",borderRadius:"100px",boxShadow:`0 0 32px ${acc}44`}}>{$(d.primary_cta,"Get Started")} {!isBrut&&<span>→</span>}</a>
     <a href="#features" className={isBrut?"btn-ghost brut":"btn-ghost"}>{$(d.secondary_cta,"See Features")}</a>
   </div>;
-  const Stats = ({ center=false }) => stats.length>0 ? <div className="hero-stats" style={{marginTop:"clamp(28px,4vw,44px)",..( center?{maxWidth:640,marginLeft:"auto",marginRight:"auto"}:{})}}>
+  const Stats = ({ center=false }) => stats.length>0 ? <div className="hero-stats" style={{marginTop:"clamp(28px,4vw,44px)",...( center?{maxWidth:640,marginLeft:"auto",marginRight:"auto"}:{})}}>
     {stats.map((st,i) => <Ctr key={i} value={$(st.value)} label={$(st.label)} run={iv} c={ctx} />)}
   </div> : null;
   const MediaBlk = () => <div className="hero-media">
@@ -1269,7 +1269,7 @@ function Features({ d, ctx }: { d: Rec; ctx: TC }) {
             const [hov,setHov]=useState(false);
             return <A key={i} t="as" d={i*60} ch={
               <div style={{borderRadius:isBrut?"2px":"20px",border:`1px solid ${hov?acc+"44":border}`,overflow:"hidden",background:cardBg,cursor:"default",transition:"all .25s"}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>
-                <div style={{height:"clamp(100px,12vw,160px)",background:`linear-gradient(135deg,${acc}${["22","18","14"][i%3]},${hi}${["14","18","22"][i%3]})`,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s",..( hov?{background:`linear-gradient(135deg,${acc}30,${hi}28)`}:{})}}>
+                <div style={{height:"clamp(100px,12vw,160px)",background:`linear-gradient(135deg,${acc}${["22","18","14"][i%3]},${hi}${["14","18","22"][i%3]})`,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s",...( hov?{background:`linear-gradient(135deg,${acc}30,${hi}28)`}:{})}}>
                   <SvgIcon name={$(it.icon)} size={48} color={hov?acc:"var(--mu)"} sw={1.25}/>
                 </div>
                 <div style={{padding:"clamp(16px,2.5vw,24px)"}}>
