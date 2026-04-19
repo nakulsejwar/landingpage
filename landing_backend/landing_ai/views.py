@@ -439,23 +439,43 @@ class RegenerateSection(APIView):
         obj = LandingSection.objects.filter(page=page, section_name=section).first()
         existing_payload = obj.content_json if obj and isinstance(obj.content_json, dict) else {}
         existing_data = existing_payload.get("data", {})
-        user_prompt = request.data.get("prompt", "Improve this section")
+        user_prompt = request.data.get("prompt", "Redesign this section with a completely new visual approach")
+
+        # Build rich design context including theme, fonts, colors
+        page_meta = get_page_meta(page)
+        design_context = {
+            **page_meta,
+            "section_name": section,
+            "current_layout": existing_data.get("layout_variant", ""),
+            "current_fonts": page_meta.get("theme", {}).get("font_style", "modern"),
+        }
 
         prompt = REGENERATE_SECTION_PROMPT.format(
             section=section,
             user_prompt=user_prompt,
-            design_system=get_page_meta(page),
+            design_system=design_context,
             existing_data=existing_data,
         )
 
         llm = get_llm()
-        data = safe_json_load(llm.generate_content(prompt).text)
+        raw_response = llm.generate_content(prompt).text
+        data = safe_json_load(raw_response)
 
+        # If AI returned custom_html, preserve it in the data
+        custom_html = data.get("custom_html", "") if isinstance(data, dict) else ""
+
+        # Build standard payload from the rest of the fields
         content_json = build_section_payload(
             section_name=section,
             section_data=data,
             image_mode=request.data.get("image_mode", "mixed"),
         )
+
+        # Inject custom_html into the data so renderer picks it up
+        if custom_html and isinstance(content_json, dict):
+            if "data" not in content_json:
+                content_json["data"] = {}
+            content_json["data"]["custom_html"] = custom_html
 
         section_obj, _ = LandingSection.objects.update_or_create(
             page=page,
@@ -690,3 +710,175 @@ class LandingImageUpload(APIView):
         saved_path = default_storage.save(filename, image)
         url = request.build_absolute_uri(settings.MEDIA_URL + saved_path)
         return Response({"url": url})
+
+
+# ── Contact Form Views ────────────────────────────────────────────────────────
+from .models import ContactFormConfig, ContactFormEntry
+from django.core.mail import send_mail
+from django.conf import settings as django_settings
+import json as json_lib
+
+
+class ContactFormConfigView(APIView):
+    """GET/POST/PUT the form config for a page."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, page_id):
+        """Public: get form config for rendering on the landing page."""
+        try:
+            page = LandingPage.objects.get(id=page_id)
+            form = ContactFormConfig.objects.get(page=page)
+            return Response(self._serialize(form))
+        except LandingPage.DoesNotExist:
+            return Response({"error": "Page not found"}, status=404)
+        except ContactFormConfig.DoesNotExist:
+            return Response(None, status=200)
+
+    def _serialize(self, form):
+        return {
+            "id": str(form.id),
+            "page_id": str(form.page.id),
+            "title": form.title,
+            "subtitle": form.subtitle,
+            "submit_label": form.submit_label,
+            "success_message": form.success_message,
+            "admin_email": form.admin_email,
+            "fields_config": form.fields_config,
+            "button_color": form.button_color,
+            "background_color": form.background_color,
+        }
+
+    def post(self, request, page_id):
+        """Create or update form config (auth required)."""
+        if not request.user.is_authenticated:
+            return Response({"error": "Auth required"}, status=401)
+        try:
+            page = LandingPage.objects.get(id=page_id, user=request.user)
+        except LandingPage.DoesNotExist:
+            return Response({"error": "Page not found"}, status=404)
+
+        form, _ = ContactFormConfig.objects.get_or_create(page=page)
+        data = request.data
+
+        form.title = data.get("title", form.title)
+        form.subtitle = data.get("subtitle", form.subtitle)
+        form.submit_label = data.get("submit_label", form.submit_label)
+        form.success_message = data.get("success_message", form.success_message)
+        form.admin_email = data.get("admin_email", form.admin_email)
+        form.fields_config = data.get("fields_config", form.fields_config)
+        form.button_color = data.get("button_color", form.button_color)
+        form.background_color = data.get("background_color", form.background_color)
+        form.save()
+
+        return Response(self._serialize(form))
+
+    def delete(self, request, page_id):
+        """Delete form config."""
+        if not request.user.is_authenticated:
+            return Response({"error": "Auth required"}, status=401)
+        try:
+            page = LandingPage.objects.get(id=page_id, user=request.user)
+            ContactFormConfig.objects.filter(page=page).delete()
+            return Response({"deleted": True})
+        except LandingPage.DoesNotExist:
+            return Response({"error": "Page not found"}, status=404)
+
+
+class ContactFormSubmitView(APIView):
+    """Public: submit a form entry."""
+    permission_classes = [AllowAny]
+
+    def post(self, request, page_id):
+        try:
+            page = LandingPage.objects.get(id=page_id)
+            form_config = ContactFormConfig.objects.get(page=page)
+        except (LandingPage.DoesNotExist, ContactFormConfig.DoesNotExist):
+            return Response({"error": "Form not found"}, status=404)
+
+        submission_data = request.data.get("data", {})
+
+        # Basic validation: check required fields
+        for field in form_config.fields_config:
+            if field.get("required") and not submission_data.get(field.get("label", "")):
+                return Response(
+                    {"error": f"{field.get('label', 'A required field')} is required"},
+                    status=400,
+                )
+
+        # Save entry
+        ip = (
+            request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip()
+            or request.META.get("REMOTE_ADDR")
+        )
+        entry = ContactFormEntry.objects.create(
+            form=form_config,
+            data=submission_data,
+            ip_address=ip or None,
+            user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
+        )
+
+        # Send email notification
+        if form_config.admin_email:
+            try:
+                rows = "\n".join(f"  {k}: {v}" for k, v in submission_data.items())
+                send_mail(
+                    subject=f"[{page.title}] New Form Submission",
+                    message=f"New submission from your landing page '{page.title}':\n\n{rows}\n\nSubmitted at: {entry.submitted_at}",
+                    from_email=django_settings.DEFAULT_FROM_EMAIL or "noreply@example.com",
+                    recipient_list=[form_config.admin_email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass  # Don't fail the request if mail fails
+
+        return Response({
+            "success": True,
+            "message": form_config.success_message,
+            "entry_id": str(entry.id),
+        })
+
+
+class ContactFormEntriesView(APIView):
+    """Auth: list entries for a page's form."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, page_id):
+        try:
+            page = LandingPage.objects.get(id=page_id, user=request.user)
+            form_config = ContactFormConfig.objects.get(page=page)
+        except LandingPage.DoesNotExist:
+            return Response({"error": "Page not found"}, status=404)
+        except ContactFormConfig.DoesNotExist:
+            return Response({"entries": [], "total": 0, "fields": []})
+
+        entries = form_config.entries.all()
+        return Response({
+            "total": entries.count(),
+            "fields": [f.get("label") for f in form_config.fields_config],
+            "form": {
+                "title": form_config.title,
+                "admin_email": form_config.admin_email,
+            },
+            "entries": [
+                {
+                    "id": str(e.id),
+                    "data": e.data,
+                    "submitted_at": e.submitted_at.isoformat(),
+                    "ip_address": e.ip_address,
+                }
+                for e in entries
+            ],
+        })
+
+    def delete(self, request, page_id):
+        """Delete a single entry by entry_id query param."""
+        entry_id = request.query_params.get("entry_id")
+        if not entry_id:
+            return Response({"error": "entry_id required"}, status=400)
+        try:
+            page = LandingPage.objects.get(id=page_id, user=request.user)
+            form_config = ContactFormConfig.objects.get(page=page)
+            form_config.entries.filter(id=entry_id).delete()
+            return Response({"deleted": True})
+        except (LandingPage.DoesNotExist, ContactFormConfig.DoesNotExist):
+            return Response({"error": "Not found"}, status=404)

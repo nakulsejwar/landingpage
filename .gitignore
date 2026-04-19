@@ -1,3 +1,4 @@
 /landing_backend/my_env
 landing_backend/.env
 *.pyc
+landing_backend/.env

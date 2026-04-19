@@ -11,147 +11,152 @@ type Props = {
 };
 
 type FieldKind = "text" | "textarea";
+type ObjectField = { key: string; label: string; kind?: FieldKind };
+type ListSchema = { key: string; label: string; itemLabel: string; fields: ObjectField[] };
 
-type ObjectField = {
-  key: string;
-  label: string;
-  kind?: FieldKind;
-};
-
-type ListSchema = {
-  key: string;
-  label: string;
-  itemLabel: string;
-  fields: ObjectField[];
-};
-
-type SectionDesign = {
-  backgroundColor?: string;
-  panelColor?: string;
-  borderColor?: string;
-  headingColor?: string;
-  bodyColor?: string;
-  accentColor?: string;
-  buttonColor?: string;
-  buttonTextColor?: string;
-  headingFont?: string;
-  bodyFont?: string;
-  contentAlign?: "left" | "center";
-  sectionPadding?: string;
-  headingSize?: string;
-};
-
-const FONT_OPTIONS = [
-  { value: "modern", label: "Modern Sans" },
-  { value: "display", label: "Display Sans" },
-  { value: "editorial", label: "Editorial Serif" },
-  { value: "luxury", label: "Luxury Serif" },
-  { value: "geometric", label: "Geometric Sans" },
-  { value: "mono", label: "Mono" },
-];
-
-const SPACING_OPTIONS = [
-  { value: "py-16", label: "Compact" },
-  { value: "py-24", label: "Balanced" },
-  { value: "py-32", label: "Spacious" },
-];
-
-const HEADING_SIZE_OPTIONS = [
-  { value: "2.5rem", label: "Medium" },
-  { value: "3.25rem", label: "Large" },
-  { value: "4.25rem", label: "XL" },
-  { value: "5.25rem", label: "Hero XL" },
-];
-
+// All layout variants now include the full 50+ set
 const LAYOUT_OPTIONS: Record<string, { value: string; label: string }[]> = {
+  header: [
+    { value: "glass", label: "Glass (scrolled blur)" },
+    { value: "pill", label: "Pill nav" },
+    { value: "editorial", label: "Editorial (centered)" },
+    { value: "neon", label: "Neon glow" },
+    { value: "brutalist", label: "Brutalist" },
+    { value: "minimal", label: "Minimal" },
+    { value: "frosted", label: "Frosted" },
+    { value: "tech", label: "Tech terminal" },
+    { value: "large", label: "Large brand" },
+    { value: "announcement", label: "Announcement bar" },
+  ],
   hero: [
-    { value: "split-right", label: "Split Right" },
-    { value: "split-left", label: "Split Left" },
-    { value: "centered", label: "Centered" },
-    { value: "stacked-showcase", label: "Stacked Showcase" },
+    { value: "split-right", label: "Split Right (text left, image right)" },
+    { value: "split-left", label: "Split Left (image left, text right)" },
+    { value: "split-accent", label: "Split Accent (diagonal bg)" },
+    { value: "split-bold", label: "Split Bold (massive type)" },
+    { value: "split-stats-bottom", label: "Split + Stats Bar Below" },
+    { value: "split-editorial", label: "Split Editorial (magazine)" },
+    { value: "split-announce", label: "Split + Announcement" },
+    { value: "centered", label: "Centered (no image)" },
+    { value: "centered-media", label: "Centered + Image Below" },
+    { value: "centered-pill", label: "Centered + Pill Badge" },
+    { value: "centered-dark", label: "Centered Dark Burst" },
+    { value: "full-bg", label: "Full BG Image Overlay" },
+    { value: "big-text", label: "Big Text (oversized headline)" },
+    { value: "diagonal", label: "Diagonal Color Split" },
+    { value: "gradient-burst", label: "Gradient Burst" },
+    { value: "stacked-showcase", label: "Stacked Showcase (full-width image)" },
+    { value: "product-card", label: "Product Card Mockup" },
+    { value: "brut-banner", label: "Brutalist Banner" },
+    { value: "neon-frame", label: "Neon Grid Frame" },
+    { value: "magazine", label: "Magazine Layout" },
   ],
   features: [
-    { value: "cards-3", label: "3 Column Grid" },
-    { value: "cards-2", label: "2 Column Grid" },
+    { value: "cards-3", label: "3 Column Cards" },
+    { value: "cards-2", label: "2 Column Cards" },
+    { value: "cards-4", label: "4 Column Cards" },
     { value: "spotlight-first", label: "Spotlight First Card" },
     { value: "alternating", label: "Alternating Rows" },
+    { value: "numbered-list", label: "Numbered List (sticky heading)" },
+    { value: "icon-row", label: "Icon Row Grid" },
+    { value: "bento", label: "Bento Grid (mixed sizes)" },
+    { value: "feature-table", label: "Feature Table" },
+    { value: "two-column-text", label: "Two Column Text List" },
+    { value: "ticker", label: "Ticker Tape (auto-scroll)" },
+    { value: "terminal", label: "Terminal CLI Style" },
+    { value: "checklist-cols", label: "Checklist Columns" },
+    { value: "icon-dominant", label: "Icon Dominant Grid" },
+    { value: "half-screen", label: "Half Screen Panel" },
+    { value: "numbered-magazine", label: "Numbered Magazine" },
+    { value: "accordion-features", label: "Accordion Expand" },
+    { value: "stripe-rows", label: "Stripe Rows" },
+    { value: "stat-forward", label: "Stat Forward" },
+    { value: "card-image-top", label: "Card with Image Top" },
+    { value: "sticky-scroll", label: "Sticky Scroll" },
+    { value: "comparison", label: "Before/After Comparison" },
+    { value: "neon-cards", label: "Neon Glow Cards" },
+    { value: "brutalist-grid", label: "Brutalist Grid" },
+    { value: "glass-float", label: "Glass Float Cards" },
+    { value: "tab-switcher", label: "Tab Switcher" },
+    { value: "editorial-features", label: "Editorial Layout" },
   ],
   about: [
-    { value: "split-media", label: "Split Media" },
-    { value: "story-card", label: "Story Card" },
-    { value: "stats-left", label: "Stats Left" },
+    { value: "split-media", label: "Split Media (text + image)" },
+    { value: "story-card", label: "Story Card (image inset)" },
+    { value: "stats-left", label: "Stats Left Column" },
+    { value: "timeline", label: "Timeline Steps" },
+    { value: "full-width-card", label: "Full Width Card" },
+    { value: "centered-prose", label: "Centered Prose" },
+    { value: "dark-feature-card", label: "Dark Feature Card" },
+    { value: "full-bleed", label: "Full Bleed Image" },
+    { value: "counter-showcase", label: "Counter Showcase" },
+    { value: "manifesto", label: "Manifesto (large text)" },
+    { value: "mosaic", label: "Mosaic Grid" },
   ],
   testimonials: [
-    { value: "grid", label: "Grid" },
-    { value: "spotlight", label: "Spotlight" },
-    { value: "stacked", label: "Stacked" },
+    { value: "grid", label: "3 Column Grid" },
+    { value: "marquee", label: "Auto-scroll Marquee" },
+    { value: "spotlight", label: "Spotlight (1 large + small)" },
+    { value: "stacked", label: "Stacked Single Column" },
+    { value: "masonry", label: "Masonry Columns" },
+    { value: "quote-large", label: "Giant Single Quote" },
+    { value: "side-by-side", label: "Side by Side (2 large)" },
+    { value: "magazine-grid", label: "Magazine Grid" },
+    { value: "split-panel", label: "Split Dark Panel" },
+    { value: "logo-wall", label: "Logo Wall + Reviews" },
   ],
   faq: [
     { value: "accordion", label: "Accordion" },
     { value: "two-column", label: "Two Column" },
+    { value: "side-question", label: "Side Tab Questions" },
+    { value: "numbered-accordion", label: "Numbered Large" },
+    { value: "minimal-list", label: "Minimal Borderless" },
+    { value: "cards-grid", label: "Cards Grid" },
+    { value: "centered-accordion", label: "Centered Accordion" },
   ],
   contact: [
-    { value: "split", label: "Split" },
-    { value: "centered", label: "Centered" },
-    { value: "compact", label: "Compact" },
+    { value: "split", label: "Split (text + links)" },
+    { value: "centered", label: "Centered CTA" },
+    { value: "compact", label: "Compact Inline" },
+    { value: "minimal-cta", label: "Minimal Bottom Bar" },
+    { value: "full-width-dark", label: "Full Width Dark" },
+    { value: "two-col-links", label: "Two Column Links" },
+    { value: "newsletter", label: "Newsletter Input" },
+    { value: "social-cta", label: "Social CTA + Footer" },
+    { value: "newspaper", label: "Newspaper Footer" },
   ],
 };
 
 const SECTION_FIELDS: Record<string, { simple?: ObjectField[]; lists?: ListSchema[]; media?: boolean }> = {
   header: {
     simple: [
-      { key: "announcement", label: "Announcement", kind: "textarea" },
-      { key: "cta_label", label: "CTA label" },
+      { key: "announcement", label: "Announcement bar text", kind: "textarea" },
+      { key: "cta_label", label: "CTA button label" },
     ],
     lists: [
-      {
-        key: "nav_items",
-        label: "Navigation items",
-        itemLabel: "Nav item",
-        fields: [{ key: "value", label: "Label" }],
-      },
+      { key: "nav_items", label: "Nav items", itemLabel: "Item", fields: [{ key: "value", label: "Label" }] },
     ],
   },
   hero: {
     simple: [
-      { key: "eyebrow", label: "Eyebrow" },
+      { key: "eyebrow", label: "Eyebrow badge" },
       { key: "headline", label: "Headline", kind: "textarea" },
       { key: "subheadline", label: "Subheadline", kind: "textarea" },
       { key: "primary_cta", label: "Primary CTA" },
       { key: "secondary_cta", label: "Secondary CTA" },
-      { key: "image_query", label: "Image query", kind: "textarea" },
-      { key: "image_role", label: "Image role", kind: "textarea" },
     ],
     lists: [
-      {
-        key: "stats",
-        label: "Stats",
-        itemLabel: "Stat",
-        fields: [
-          { key: "label", label: "Label" },
-          { key: "value", label: "Value" },
-        ],
-      },
+      { key: "stats", label: "Stats", itemLabel: "Stat", fields: [{ key: "label", label: "Label" }, { key: "value", label: "Value" }] },
     ],
     media: true,
   },
   features: {
     simple: [
       { key: "eyebrow", label: "Eyebrow" },
-      { key: "title", label: "Title", kind: "textarea" },
+      { key: "title", label: "Section title", kind: "textarea" },
       { key: "description", label: "Description", kind: "textarea" },
     ],
     lists: [
-      {
-        key: "items",
-        label: "Feature cards",
-        itemLabel: "Feature",
-        fields: [
-          { key: "icon", label: "Icon" },
-          { key: "title", label: "Title" },
-          { key: "description", label: "Description", kind: "textarea" },
-        ],
-      },
+      { key: "items", label: "Features", itemLabel: "Feature", fields: [{ key: "icon", label: "Icon name" }, { key: "title", label: "Title" }, { key: "description", label: "Description", kind: "textarea" }] },
     ],
   },
   about: {
@@ -159,25 +164,10 @@ const SECTION_FIELDS: Record<string, { simple?: ObjectField[]; lists?: ListSchem
       { key: "eyebrow", label: "Eyebrow" },
       { key: "title", label: "Title", kind: "textarea" },
       { key: "description", label: "Description", kind: "textarea" },
-      { key: "image_query", label: "Image query", kind: "textarea" },
-      { key: "image_role", label: "Image role", kind: "textarea" },
     ],
     lists: [
-      {
-        key: "bullets",
-        label: "Bullets",
-        itemLabel: "Bullet",
-        fields: [{ key: "value", label: "Text", kind: "textarea" }],
-      },
-      {
-        key: "stats",
-        label: "Stats",
-        itemLabel: "Stat",
-        fields: [
-          { key: "label", label: "Label" },
-          { key: "value", label: "Value" },
-        ],
-      },
+      { key: "bullets", label: "Bullet points", itemLabel: "Point", fields: [{ key: "value", label: "Text", kind: "textarea" }] },
+      { key: "stats", label: "Stats", itemLabel: "Stat", fields: [{ key: "label", label: "Label" }, { key: "value", label: "Value" }] },
     ],
     media: true,
   },
@@ -186,22 +176,10 @@ const SECTION_FIELDS: Record<string, { simple?: ObjectField[]; lists?: ListSchem
       { key: "eyebrow", label: "Eyebrow" },
       { key: "title", label: "Title", kind: "textarea" },
       { key: "description", label: "Description", kind: "textarea" },
-      { key: "image_query", label: "Image query", kind: "textarea" },
-      { key: "image_role", label: "Image role", kind: "textarea" },
     ],
     lists: [
-      {
-        key: "items",
-        label: "Testimonials",
-        itemLabel: "Testimonial",
-        fields: [
-          { key: "name", label: "Name" },
-          { key: "role", label: "Role" },
-          { key: "quote", label: "Quote", kind: "textarea" },
-        ],
-      },
+      { key: "items", label: "Testimonials", itemLabel: "Testimonial", fields: [{ key: "name", label: "Name" }, { key: "role", label: "Role" }, { key: "company", label: "Company" }, { key: "quote", label: "Quote", kind: "textarea" }] },
     ],
-    media: true,
   },
   faq: {
     simple: [
@@ -210,15 +188,7 @@ const SECTION_FIELDS: Record<string, { simple?: ObjectField[]; lists?: ListSchem
       { key: "description", label: "Description", kind: "textarea" },
     ],
     lists: [
-      {
-        key: "items",
-        label: "FAQ items",
-        itemLabel: "Question",
-        fields: [
-          { key: "question", label: "Question" },
-          { key: "answer", label: "Answer", kind: "textarea" },
-        ],
-      },
+      { key: "items", label: "FAQ items", itemLabel: "Q&A", fields: [{ key: "question", label: "Question" }, { key: "answer", label: "Answer", kind: "textarea" }] },
     ],
   },
   contact: {
@@ -228,651 +198,329 @@ const SECTION_FIELDS: Record<string, { simple?: ObjectField[]; lists?: ListSchem
       { key: "description", label: "Description", kind: "textarea" },
       { key: "primary_cta", label: "Primary CTA" },
       { key: "secondary_cta", label: "Secondary CTA" },
-      { key: "email", label: "Email" },
+      { key: "email", label: "Email address" },
     ],
     lists: [
-      {
-        key: "links",
-        label: "Links",
-        itemLabel: "Link",
-        fields: [
-          { key: "label", label: "Label" },
-          { key: "href", label: "URL" },
-        ],
-      },
+      { key: "links", label: "Links", itemLabel: "Link", fields: [{ key: "label", label: "Label" }, { key: "href", label: "URL" }] },
+    ],
+  },
+  contact_form: {
+    simple: [
+      { key: "title", label: "Form title" },
+      { key: "subtitle", label: "Form subtitle", kind: "textarea" },
+      { key: "submit_label", label: "Submit button label" },
+      { key: "success_message", label: "Success message", kind: "textarea" },
+      { key: "admin_email", label: "Admin notification email" },
     ],
   },
 };
 
-function asObject(value: unknown) {
-  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function asObject(v: unknown) { return v && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : {}; }
+function asString(v: unknown) { return typeof v === "string" ? v : ""; }
+function asStringList(v: unknown) { return Array.isArray(v) ? v.filter((i): i is string => typeof i === "string") : []; }
+function asObjectList(v: unknown) { return Array.isArray(v) ? v.filter((i): i is Record<string, unknown> => !!i && typeof i === "object" && !Array.isArray(i)) : []; }
+function defaultItemFor(fields: ObjectField[]) { return Object.fromEntries(fields.map(f => [f.key, ""])); }
+function dedupeByUrl(items: Record<string, unknown>[]) {
+  const seen = new Set<string>();
+  return items.filter(i => { const u = asString(i.url); if (!u || seen.has(u)) return false; seen.add(u); return true; });
 }
-
-function asString(value: unknown) {
-  return typeof value === "string" ? value : "";
-}
-
-function asStringList(value: unknown) {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-}
-
-function asObjectList(value: unknown) {
-  return Array.isArray(value)
-    ? value.filter((item): item is Record<string, unknown> => !!item && typeof item === "object" && !Array.isArray(item))
-    : [];
-}
-
-function defaultItemFor(fields: ObjectField[]) {
-  return Object.fromEntries(fields.map((field) => [field.key, ""]));
-}
-
 function mergeMediaChoices(section: LandingSectionRecord) {
   const fromData = asObjectList(section.data.media_choices);
   const assets = asObject(section.assets);
-  const fromAssets = ["stock", "generated"].flatMap((bucket) => asObjectList(assets[bucket]));
+  const fromAssets = ["stock", "generated"].flatMap(b => asObjectList(assets[b]));
   const unique = new Map<string, Record<string, unknown>>();
-
-  [...fromData, ...fromAssets].forEach((item) => {
-    const url = asString(item.url);
-    if (url && !unique.has(url)) {
-      unique.set(url, item);
-    }
-  });
-
+  [...fromData, ...fromAssets].forEach(i => { const u = asString(i.url); if (u && !unique.has(u)) unique.set(u, i); });
   return Array.from(unique.values());
 }
-
 function applySectionData(section: LandingSectionRecord, nextData: Record<string, unknown>) {
-  return {
-    ...section,
-    data: nextData,
-  };
+  return { ...section, data: nextData };
 }
-
 function applyMedia(section: LandingSectionRecord, media: Record<string, unknown>, mediaChoices?: Record<string, unknown>[]) {
-  return {
-    ...section,
-    data: {
-      ...section.data,
-      media,
-      media_choices: mediaChoices ?? section.data.media_choices,
-    },
-  };
+  return { ...section, data: { ...section.data, media, media_choices: mediaChoices ?? section.data.media_choices } };
 }
 
-function getSectionDesign(section: LandingSectionRecord) {
-  return asObject(section.data.design) as SectionDesign;
+// ── Get effective data for editing (handles custom_html sections) ──────────────
+// When a section was regenerated with custom_html, the data fields may be sparse.
+// We still show what we have and let users edit the structured fields.
+function getEffectiveData(section: LandingSectionRecord): Record<string, unknown> {
+  return section.data || {};
 }
 
 export default function VisualEditorPanel({ section, onChange }: Props) {
-  const config = section ? SECTION_FIELDS[section.name] : null;
   const [imageSearch, setImageSearch] = useState("");
   const [imageLoading, setImageLoading] = useState(false);
   const [imageMessage, setImageMessage] = useState("");
+  const [activeTab, setActiveTab] = useState<"content" | "layout" | "media">("content");
+
+  const config = section ? (SECTION_FIELDS[section.name] || null) : null;
+  const layoutOptions = section ? (LAYOUT_OPTIONS[section.name] || []) : [];
 
   useEffect(() => {
-    if (!section) {
-      setImageSearch("");
-      setImageMessage("");
-      return;
-    }
-    const query = asString(section.strategy.image_query) || asString(section.data.image_query);
-    setImageSearch(query);
+    if (!section) { setImageSearch(""); setImageMessage(""); return; }
+    const q = asString(section.strategy?.image_query) || asString(section.data?.image_query);
+    setImageSearch(q);
     setImageMessage("");
-  }, [section]);
+  }, [section?.name]);
 
   const mediaChoices = useMemo(() => (section ? mergeMediaChoices(section) : []), [section]);
-  const selectedMedia = useMemo(() => (section ? asObject(section.data.media) : {}), [section]);
+  const selectedMedia = useMemo(() => (section ? asObject(section.data?.media) : {}), [section]);
 
-  if (!section || !config) {
+  if (!section) {
     return (
-      <div className="rounded-[28px] border border-white/10 bg-slate-950/70 p-6 text-sm text-slate-400">
-        Select a section to start editing.
+      <div style={{ padding: 24, borderRadius: 20, border: "1px solid rgba(255,255,255,.08)", background: "rgba(255,255,255,.02)", color: "#94a3b8", fontSize: 14 }}>
+        Select a section from the left panel to start editing.
       </div>
     );
   }
 
+  const hasCustomHtml = !!asString(section.data?.custom_html);
   const currentSection = section;
-  const design = getSectionDesign(currentSection);
-
-  function updateDesign(key: keyof SectionDesign, value: string) {
-    const nextDesign: SectionDesign = {
-      ...design,
-      [key]: value,
-    };
-
-    onChange(
-      applySectionData(currentSection, {
-        ...currentSection.data,
-        design: nextDesign,
-      })
-    );
-  }
+  const effectiveData = getEffectiveData(currentSection);
 
   function setValue(key: string, value: string) {
-    onChange(
-      applySectionData(currentSection, {
-        ...currentSection.data,
-        [key]: value,
-      })
-    );
+    // When editing a custom_html section, we clear the custom_html so structured rendering takes over
+    const nextData: Record<string, unknown> = { ...effectiveData, [key]: value };
+    if (hasCustomHtml && key !== "custom_html") {
+      // Keep custom_html unless user explicitly edits content fields
+      // Actually remove it so the structured renderer picks up
+      delete nextData.custom_html;
+    }
+    onChange(applySectionData(currentSection, nextData));
+  }
+
+  function setLayoutVariant(value: string) {
+    const nextData: Record<string, unknown> = { ...effectiveData, layout_variant: value };
+    if (hasCustomHtml) delete nextData.custom_html; // switch back to structured
+    onChange(applySectionData(currentSection, nextData));
   }
 
   function setStringListValue(key: string, index: number, value: string) {
-    const current = asStringList(currentSection.data[key]);
+    const current = asStringList(effectiveData[key]);
     current[index] = value;
-    onChange(applySectionData(currentSection, { ...currentSection.data, [key]: current }));
+    onChange(applySectionData(currentSection, { ...effectiveData, [key]: current }));
   }
-
   function addStringListValue(key: string) {
-    const current = asStringList(currentSection.data[key]);
-    onChange(applySectionData(currentSection, { ...currentSection.data, [key]: [...current, ""] }));
+    const current = asStringList(effectiveData[key]);
+    onChange(applySectionData(currentSection, { ...effectiveData, [key]: [...current, ""] }));
   }
-
   function removeStringListValue(key: string, index: number) {
-    const current = asStringList(currentSection.data[key]).filter((_, itemIndex) => itemIndex !== index);
-    onChange(applySectionData(currentSection, { ...currentSection.data, [key]: current }));
+    const current = asStringList(effectiveData[key]).filter((_, i) => i !== index);
+    onChange(applySectionData(currentSection, { ...effectiveData, [key]: current }));
   }
-
-  function moveStringListValue(key: string, index: number, direction: -1 | 1) {
-    const current = [...asStringList(currentSection.data[key])];
-    const target = index + direction;
-    if (target < 0 || target >= current.length) {
-      return;
-    }
-    [current[index], current[target]] = [current[target], current[index]];
-    onChange(applySectionData(currentSection, { ...currentSection.data, [key]: current }));
-  }
-
   function updateObjectListValue(listKey: string, index: number, fieldKey: string, value: string) {
-    const current = [...asObjectList(currentSection.data[listKey])];
+    const current = [...asObjectList(effectiveData[listKey])];
     current[index] = { ...current[index], [fieldKey]: value };
-    onChange(applySectionData(currentSection, { ...currentSection.data, [listKey]: current }));
+    onChange(applySectionData(currentSection, { ...effectiveData, [listKey]: current }));
   }
-
   function addObjectListValue(listKey: string, fields: ObjectField[]) {
-    const current = asObjectList(currentSection.data[listKey]);
-    onChange(applySectionData(currentSection, { ...currentSection.data, [listKey]: [...current, defaultItemFor(fields)] }));
+    const current = asObjectList(effectiveData[listKey]);
+    onChange(applySectionData(currentSection, { ...effectiveData, [listKey]: [...current, defaultItemFor(fields)] }));
   }
-
   function removeObjectListValue(listKey: string, index: number) {
-    const current = asObjectList(currentSection.data[listKey]).filter((_, itemIndex) => itemIndex !== index);
-    onChange(applySectionData(currentSection, { ...currentSection.data, [listKey]: current }));
+    const current = asObjectList(effectiveData[listKey]).filter((_, i) => i !== index);
+    onChange(applySectionData(currentSection, { ...effectiveData, [listKey]: current }));
   }
-
   function moveObjectListValue(listKey: string, index: number, direction: -1 | 1) {
-    const current = [...asObjectList(currentSection.data[listKey])];
+    const current = [...asObjectList(effectiveData[listKey])];
     const target = index + direction;
-    if (target < 0 || target >= current.length) {
-      return;
-    }
+    if (target < 0 || target >= current.length) return;
     [current[index], current[target]] = [current[target], current[index]];
-    onChange(applySectionData(currentSection, { ...currentSection.data, [listKey]: current }));
+    onChange(applySectionData(currentSection, { ...effectiveData, [listKey]: current }));
   }
 
   async function searchImages() {
-    const query = imageSearch.trim();
-    if (!query) {
-      setImageMessage("Add a search phrase first.");
-      return;
-    }
-
-    setImageLoading(true);
-    setImageMessage("");
+    const q = imageSearch.trim();
+    if (!q) { setImageMessage("Add a search phrase first."); return; }
+    setImageLoading(true); setImageMessage("");
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}stock-images/?query=${encodeURIComponent(query)}`
-      );
-      const data = await parseApiResponse<{ results?: Record<string, unknown>[]; hint?: string; warning?: string }>(response);
+      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}stock-images/?query=${encodeURIComponent(q)}`);
+      const data = await parseApiResponse<{ results?: Record<string, unknown>[]; hint?: string }>(r);
       const results = Array.isArray(data.results) ? data.results : [];
-      const mergedChoices = [...results, ...mediaChoices];
-      onChange(
-        applyMedia(
-          currentSection,
-          asObject(currentSection.data.media),
-          dedupeByUrl(mergedChoices)
-        )
-      );
-      setImageMessage(results.length ? "Fresh image options loaded." : data.hint || data.warning || "No results found.");
-    } catch (error) {
-      setImageMessage(error instanceof Error ? error.message : "Image search failed.");
-    } finally {
-      setImageLoading(false);
-    }
-  }
-
-  async function generateImage() {
-    setImageLoading(true);
-    setImageMessage("");
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}generate-image/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt:
-            imageSearch ||
-            asString(currentSection.strategy.image_query) ||
-            asString(currentSection.data.title) ||
-            currentSection.name,
-          variant: currentSection.name,
-        }),
-      });
-      const data = await parseApiResponse<Record<string, unknown>>(response);
-      const generated = {
-        url: asString(data.url),
-        alt: `${currentSection.name} generated visual`,
-        provider: asString(data.provider) || "generated",
-        thumbnail: asString(data.url),
-      };
-      onChange(applyMedia(currentSection, generated, dedupeByUrl([generated, ...mediaChoices])));
-      setImageMessage("Generated a fresh visual for this section.");
-    } catch (error) {
-      setImageMessage(error instanceof Error ? error.message : "Image generation failed.");
-    } finally {
-      setImageLoading(false);
-    }
+      onChange(applyMedia(currentSection, asObject(currentSection.data?.media), dedupeByUrl([...results, ...mediaChoices])));
+      setImageMessage(results.length ? `${results.length} images loaded.` : data.hint || "No results.");
+    } catch (e) { setImageMessage("Image search failed."); }
+    finally { setImageLoading(false); }
   }
 
   async function uploadImage(file: File | null) {
-    if (!file) {
-      return;
-    }
-
-    setImageLoading(true);
-    setImageMessage("");
+    if (!file) return;
+    setImageLoading(true); setImageMessage("");
     try {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}landing-image-upload/`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await parseApiResponse<Record<string, unknown>>(response);
-      const uploaded = {
-        url: asString(data.url),
-        alt: file.name,
-        provider: "upload",
-        thumbnail: asString(data.url),
-      };
+      const fd = new FormData(); fd.append("image", file);
+      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}landing-image-upload/`, { method: "POST", body: fd });
+      const data = await parseApiResponse<Record<string, unknown>>(r);
+      const uploaded = { url: asString(data.url), alt: file.name, provider: "upload", thumbnail: asString(data.url) };
       onChange(applyMedia(currentSection, uploaded, dedupeByUrl([uploaded, ...mediaChoices])));
-      setImageMessage("Uploaded image applied to this section.");
-    } catch (error) {
-      setImageMessage(error instanceof Error ? error.message : "Upload failed.");
-    } finally {
-      setImageLoading(false);
-    }
+      setImageMessage("Image uploaded and applied.");
+    } catch { setImageMessage("Upload failed."); }
+    finally { setImageLoading(false); }
   }
 
+  // Tab button style
+  const tabStyle = (active: boolean) => ({
+    padding: "7px 16px", borderRadius: 100, fontSize: 13, fontWeight: 600,
+    background: active ? "rgba(34,211,238,.15)" : "transparent",
+    border: active ? "1px solid rgba(34,211,238,.4)" : "1px solid transparent",
+    color: active ? "#22d3ee" : "#94a3b8", cursor: "pointer",
+  });
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "9px 12px", borderRadius: 10, fontSize: 13,
+    background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)",
+    color: "white", outline: "none", fontFamily: "inherit",
+  };
+  const textareaStyle: React.CSSProperties = { ...inputStyle, minHeight: 72, resize: "vertical" as const };
+  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase" as const, color: "#94a3b8", marginBottom: 4, display: "block" };
+  const sectionBox: React.CSSProperties = { background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 16, padding: 16, marginBottom: 16 };
+
   return (
-    <div className="space-y-6 rounded-[28px] border border-white/10 bg-slate-950/80 p-5 shadow-[0_20px_80px_rgba(2,6,23,0.45)]">
-      <div>
-        <div className="text-xs uppercase tracking-[0.24em] text-cyan-200">Visual editor</div>
-        <h2 className="mt-2 text-2xl font-semibold capitalize">{currentSection.name}</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-400">
-          Edit copy, blocks, and media here. The preview on the left updates immediately.
-        </p>
+    <div style={{ borderRadius: 24, border: "1px solid rgba(255,255,255,.1)", background: "rgba(2,6,23,.85)", padding: 20, boxShadow: "0 20px 80px rgba(2,6,23,.45)" }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#22d3ee", marginBottom: 4 }}>Visual Editor</div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "white", textTransform: "capitalize", margin: 0 }}>{currentSection.name}</h2>
+        {hasCustomHtml && (
+          <div style={{ marginTop: 8, padding: "6px 12px", borderRadius: 8, background: "rgba(251,191,36,.1)", border: "1px solid rgba(251,191,36,.3)", fontSize: 12, color: "#fbbf24" }}>
+            ⚡ This section was AI-regenerated. Editing any field will switch back to structured mode.
+          </div>
+        )}
       </div>
 
-      <div className="space-y-4 rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+        <button style={tabStyle(activeTab === "content")} onClick={() => setActiveTab("content")}>Content</button>
+        {layoutOptions.length > 0 && <button style={tabStyle(activeTab === "layout")} onClick={() => setActiveTab("layout")}>Layout</button>}
+        {config?.media && <button style={tabStyle(activeTab === "media")} onClick={() => setActiveTab("media")}>Media</button>}
+      </div>
+
+      {/* Content tab */}
+      {activeTab === "content" && config && (
         <div>
-          <div className="text-sm font-semibold text-white">Style studio</div>
-          <div className="mt-1 text-sm text-slate-400">
-            Control fonts, colors, spacing, alignment, and button styling for this section.
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {LAYOUT_OPTIONS[currentSection.name] ? (
-            <SelectControl
-              label="Layout"
-              value={asString(currentSection.data.layout_variant) || LAYOUT_OPTIONS[currentSection.name]?.[0]?.value || ""}
-              options={LAYOUT_OPTIONS[currentSection.name]}
-              onChange={(value) => setValue("layout_variant", value)}
-            />
-          ) : null}
-          <SelectControl
-            label="Content alignment"
-            value={design.contentAlign || "left"}
-            options={[
-              { value: "left", label: "Left" },
-              { value: "center", label: "Center" },
-            ]}
-            onChange={(value) => updateDesign("contentAlign", value)}
-          />
-          <SelectControl
-            label="Section spacing"
-            value={design.sectionPadding || "py-24"}
-            options={SPACING_OPTIONS}
-            onChange={(value) => updateDesign("sectionPadding", value)}
-          />
-          <SelectControl
-            label="Heading font"
-            value={design.headingFont || "display"}
-            options={FONT_OPTIONS}
-            onChange={(value) => updateDesign("headingFont", value)}
-          />
-          <SelectControl
-            label="Body font"
-            value={design.bodyFont || "modern"}
-            options={FONT_OPTIONS}
-            onChange={(value) => updateDesign("bodyFont", value)}
-          />
-          <SelectControl
-            label="Heading size"
-            value={design.headingSize || "3.25rem"}
-            options={HEADING_SIZE_OPTIONS}
-            onChange={(value) => updateDesign("headingSize", value)}
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <ColorControl label="Section background" value={design.backgroundColor || "#020617"} onChange={(value) => updateDesign("backgroundColor", value)} />
-          <ColorControl label="Card / panel background" value={design.panelColor || "#111827"} onChange={(value) => updateDesign("panelColor", value)} />
-          <ColorControl label="Heading color" value={design.headingColor || "#ffffff"} onChange={(value) => updateDesign("headingColor", value)} />
-          <ColorControl label="Body color" value={design.bodyColor || "#cbd5e1"} onChange={(value) => updateDesign("bodyColor", value)} />
-          <ColorControl label="Accent / eyebrow" value={design.accentColor || "#67e8f9"} onChange={(value) => updateDesign("accentColor", value)} />
-          <ColorControl label="Border color" value={design.borderColor || "#334155"} onChange={(value) => updateDesign("borderColor", value)} />
-          <ColorControl label="Button background" value={design.buttonColor || "#22d3ee"} onChange={(value) => updateDesign("buttonColor", value)} />
-          <ColorControl label="Button text" value={design.buttonTextColor || "#ffffff"} onChange={(value) => updateDesign("buttonTextColor", value)} />
-        </div>
-      </div>
-
-      {config.simple?.map((field) => (
-        <FieldControl
-          key={field.key}
-          label={field.label}
-          multiline={field.kind === "textarea"}
-          value={asString(currentSection.data[field.key])}
-          onChange={(value) => setValue(field.key, value)}
-        />
-      ))}
-
-      {config.lists?.map((list) => (
-        <div key={list.key} className="space-y-3 rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold text-white">{list.label}</div>
-              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Repeatable blocks</div>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                list.fields.length === 1 && list.fields[0]?.key === "value"
-                  ? addStringListValue(list.key)
-                  : addObjectListValue(list.key, list.fields)
+          {/* Simple fields */}
+          {config.simple && config.simple.map(field => (
+            <div key={field.key} style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>{field.label}</label>
+              {field.kind === "textarea"
+                ? <textarea style={textareaStyle} value={asString(effectiveData[field.key])} onChange={e => setValue(field.key, e.target.value)} />
+                : <input style={inputStyle} value={asString(effectiveData[field.key])} onChange={e => setValue(field.key, e.target.value)} />
               }
-              className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold text-cyan-100"
-            >
-              Add {list.itemLabel}
-            </button>
-          </div>
-
-          {list.fields.length === 1 && list.fields[0]?.key === "value"
-            ? asStringList(currentSection.data[list.key]).map((item, index) => (
-                <div key={`${list.key}-${index}`} className="rounded-[20px] border border-white/10 bg-slate-900/80 p-3">
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
-                      {list.itemLabel} {index + 1}
-                    </div>
-                    <div className="flex gap-2">
-                      <ActionButton label="Up" onClick={() => moveStringListValue(list.key, index, -1)} />
-                      <ActionButton label="Down" onClick={() => moveStringListValue(list.key, index, 1)} />
-                      <ActionButton label="Remove" onClick={() => removeStringListValue(list.key, index)} danger />
-                    </div>
-                  </div>
-                  <FieldControl
-                    label={list.fields[0].label}
-                    multiline={list.fields[0].kind === "textarea"}
-                    value={item}
-                    onChange={(value) => setStringListValue(list.key, index, value)}
-                  />
-                </div>
-              ))
-            : asObjectList(currentSection.data[list.key]).map((item, index) => (
-                <div key={`${list.key}-${index}`} className="space-y-3 rounded-[20px] border border-white/10 bg-slate-900/80 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
-                      {list.itemLabel} {index + 1}
-                    </div>
-                    <div className="flex gap-2">
-                      <ActionButton label="Up" onClick={() => moveObjectListValue(list.key, index, -1)} />
-                      <ActionButton label="Down" onClick={() => moveObjectListValue(list.key, index, 1)} />
-                      <ActionButton label="Remove" onClick={() => removeObjectListValue(list.key, index)} danger />
-                    </div>
-                  </div>
-                  {list.fields.map((field) => (
-                    <FieldControl
-                      key={field.key}
-                      label={field.label}
-                      multiline={field.kind === "textarea"}
-                      value={asString(item[field.key])}
-                      onChange={(value) => updateObjectListValue(list.key, index, field.key, value)}
-                    />
-                  ))}
-                </div>
-              ))}
-        </div>
-      ))}
-
-      {config.media ? (
-        <div className="space-y-4 rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
-          <div>
-            <div className="text-sm font-semibold text-white">Media</div>
-            <div className="mt-1 text-sm text-slate-400">
-              Pick the section visual, search for stronger matches, generate one, or upload your own.
             </div>
-          </div>
+          ))}
 
-              <FieldControl label="Search query" multiline value={imageSearch} onChange={setImageSearch} />
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={searchImages}
-              disabled={imageLoading}
-              className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-60"
-            >
-              Search stock
-            </button>
-            <button
-              type="button"
-              onClick={generateImage}
-              disabled={imageLoading}
-              className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-            >
-              Generate visual
-            </button>
-            <label className="cursor-pointer rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white">
-              Upload image
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(event) => {
-                  const file = event.target.files?.[0] || null;
-                  void uploadImage(file);
-                  event.currentTarget.value = "";
-                }}
-              />
-            </label>
-          </div>
-
-          {imageMessage ? <div className="text-sm text-slate-400">{imageMessage}</div> : null}
-
-          {asString(selectedMedia.url) ? (
-            <div className="overflow-hidden rounded-[24px] border border-cyan-400/20 bg-slate-900/70">
-              <img
-                src={asString(selectedMedia.url)}
-                  alt={asString(selectedMedia.alt) || `${currentSection.name} media`}
-                className="h-48 w-full object-cover"
-              />
-              <div className="flex items-center justify-between gap-3 px-4 py-3 text-xs text-slate-400">
-                <span>{asString(selectedMedia.provider) || "selected image"}</span>
+          {/* List fields */}
+          {config.lists && config.lists.map(list => {
+            const isStringList = list.fields.length === 1 && list.fields[0].key === "value";
+            return (
+              <div key={list.key} style={sectionBox}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "white", marginBottom: 12 }}>{list.label}</div>
+                {isStringList
+                  ? asStringList(effectiveData[list.key]).map((item, i) => (
+                      <div key={i} style={{ display: "flex", gap: 6, marginBottom: 8, alignItems: "flex-start" }}>
+                        <textarea style={{ ...textareaStyle, flex: 1, minHeight: 56 }} value={item} onChange={e => setStringListValue(list.key, i, e.target.value)} />
+                        <button onClick={() => removeStringListValue(list.key, i)} style={{ padding: "6px 10px", borderRadius: 8, background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.3)", color: "#f87171", cursor: "pointer", fontSize: 14, flexShrink: 0 }}>✕</button>
+                      </div>
+                    ))
+                  : asObjectList(effectiveData[list.key]).map((item, i) => (
+                      <div key={i} style={{ ...sectionBox, margin: "0 0 10px", padding: 12 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                          <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>{list.itemLabel} {i + 1}</span>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            <button onClick={() => moveObjectListValue(list.key, i, -1)} style={{ padding: "4px 8px", borderRadius: 6, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", color: "#94a3b8", cursor: "pointer", fontSize: 12 }}>↑</button>
+                            <button onClick={() => moveObjectListValue(list.key, i, 1)} style={{ padding: "4px 8px", borderRadius: 6, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", color: "#94a3b8", cursor: "pointer", fontSize: 12 }}>↓</button>
+                            <button onClick={() => removeObjectListValue(list.key, i)} style={{ padding: "4px 8px", borderRadius: 6, background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", color: "#f87171", cursor: "pointer", fontSize: 12 }}>✕</button>
+                          </div>
+                        </div>
+                        {list.fields.map(field => (
+                          <div key={field.key} style={{ marginBottom: 8 }}>
+                            <label style={labelStyle}>{field.label}</label>
+                            {field.kind === "textarea"
+                              ? <textarea style={{ ...textareaStyle, minHeight: 56 }} value={asString(item[field.key])} onChange={e => updateObjectListValue(list.key, i, field.key, e.target.value)} />
+                              : <input style={inputStyle} value={asString(item[field.key])} onChange={e => updateObjectListValue(list.key, i, field.key, e.target.value)} />
+                            }
+                          </div>
+                        ))}
+                      </div>
+                    ))
+                }
                 <button
-                  type="button"
-                  onClick={() =>
-                    onChange(
-                      applySectionData(currentSection, {
-                        ...currentSection.data,
-                        media: {},
-                      })
-                    )
-                  }
-                  className="rounded-full border border-white/15 px-3 py-1 text-white"
+                  onClick={() => isStringList ? addStringListValue(list.key) : addObjectListValue(list.key, list.fields)}
+                  style={{ width: "100%", padding: "8px 0", borderRadius: 10, background: "rgba(34,211,238,.08)", border: "1px dashed rgba(34,211,238,.3)", color: "#22d3ee", cursor: "pointer", fontSize: 13, fontWeight: 600 }}
                 >
-                  Clear
+                  + Add {list.itemLabel}
                 </button>
               </div>
-            </div>
-          ) : null}
+            );
+          })}
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {mediaChoices.map((item, index) => (
-              <button
-                key={`${asString(item.url)}-${index}`}
-                type="button"
-                onClick={() => onChange(applyMedia(currentSection, item, dedupeByUrl(mediaChoices)))}
-                className="overflow-hidden rounded-[22px] border border-white/10 bg-slate-900/70 text-left transition hover:border-cyan-400/30"
-              >
-                <img
-                  src={asString(item.thumbnail) || asString(item.url)}
-                  alt={asString(item.alt) || `${currentSection.name} option`}
-                  className="h-36 w-full object-cover"
-                />
-                <div className="space-y-1 px-3 py-3">
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{asString(item.provider) || "image"}</div>
-                  <div className="line-clamp-2 text-sm text-slate-200">{asString(item.alt) || imageSearch || currentSection.name}</div>
-                </div>
-              </button>
-            ))}
+          {!config.simple && !config.lists && (
+            <p style={{ color: "#94a3b8", fontSize: 13 }}>No editable fields for this section type.</p>
+          )}
+        </div>
+      )}
+
+      {/* Layout tab */}
+      {activeTab === "layout" && layoutOptions.length > 0 && (
+        <div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Layout variant</label>
+            <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+              Choosing a layout switches back to structured rendering mode.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {layoutOptions.map(opt => {
+                const isActive = asString(effectiveData.layout_variant) === opt.value;
+                return (
+                  <button key={opt.value} onClick={() => setLayoutVariant(opt.value)} style={{ textAlign: "left", padding: "10px 14px", borderRadius: 12, background: isActive ? "rgba(34,211,238,.12)" : "rgba(255,255,255,.03)", border: `1px solid ${isActive ? "rgba(34,211,238,.4)" : "rgba(255,255,255,.08)"}`, color: isActive ? "#22d3ee" : "#94a3b8", cursor: "pointer", fontSize: 13, fontWeight: isActive ? 700 : 400 }}>
+                    {isActive && <span style={{ marginRight: 8 }}>✓</span>}{opt.label}
+                    {isActive && <span style={{ fontSize: 11, marginLeft: 8, opacity: .6 }}>active</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      ) : null}
-    </div>
-  );
-}
-
-function dedupeByUrl(items: Record<string, unknown>[]) {
-  const map = new Map<string, Record<string, unknown>>();
-  items.forEach((item) => {
-    const url = asString(item.url);
-    if (url && !map.has(url)) {
-      map.set(url, item);
-    }
-  });
-  return Array.from(map.values());
-}
-
-function FieldControl({
-  label,
-  value,
-  onChange,
-  multiline = false,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  multiline?: boolean;
-}) {
-  return (
-    <label className="block">
-      <div className="mb-2 text-xs uppercase tracking-[0.22em] text-slate-500">{label}</div>
-      {multiline ? (
-        <textarea
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="min-h-[110px] w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/40"
-        />
-      ) : (
-        <input
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/40"
-        />
       )}
-    </label>
-  );
-}
 
-function ActionButton({
-  label,
-  onClick,
-  danger = false,
-}: {
-  label: string;
-  onClick: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-3 py-1 text-xs ${
-        danger
-          ? "border-rose-400/25 bg-rose-500/10 text-rose-100"
-          : "border-white/10 bg-white/5 text-slate-200"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
+      {/* Media tab */}
+      {activeTab === "media" && config?.media && (
+        <div>
+          {/* Search */}
+          <div style={sectionBox}>
+            <label style={labelStyle}>Search stock photos</label>
+            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+              <input style={{ ...inputStyle, flex: 1 }} value={imageSearch} onChange={e => setImageSearch(e.target.value)} placeholder="e.g. minimal office desk" onKeyDown={e => e.key === "Enter" && searchImages()} />
+              <button onClick={searchImages} disabled={imageLoading} style={{ padding: "9px 16px", borderRadius: 10, background: "#22d3ee", color: "#000", fontWeight: 700, fontSize: 13, cursor: "pointer", border: "none", flexShrink: 0 }}>
+                {imageLoading ? "…" : "Search"}
+              </button>
+            </div>
+            {imageMessage && <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>{imageMessage}</p>}
+          </div>
 
-function SelectControl({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <label className="block">
-      <div className="mb-2 text-xs uppercase tracking-[0.22em] text-slate-500">{label}</div>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/40"
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
+          {/* Upload */}
+          <div style={sectionBox}>
+            <label style={labelStyle}>Upload your own</label>
+            <input type="file" accept="image/*" onChange={e => uploadImage(e.target.files?.[0] || null)} style={{ fontSize: 13, color: "#94a3b8", width: "100%" }} />
+          </div>
 
-function ColorControl({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="block">
-      <div className="mb-2 text-xs uppercase tracking-[0.22em] text-slate-500">{label}</div>
-      <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/80 px-3 py-2.5">
-        <input
-          type="color"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="h-10 w-12 cursor-pointer rounded-xl border border-white/10 bg-transparent"
-        />
-        <input
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="flex-1 bg-transparent text-sm text-white outline-none"
-        />
-      </div>
-    </label>
+          {/* Media choices grid */}
+          {mediaChoices.length > 0 && (
+            <div>
+              <label style={labelStyle}>Choose image ({mediaChoices.length} available)</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {mediaChoices.map((choice, i) => {
+                  const isSelected = asString(selectedMedia.url) === asString(choice.url);
+                  return (
+                    <button key={i} onClick={() => onChange(applyMedia(currentSection, choice))} style={{ padding: 4, borderRadius: 10, border: `2px solid ${isSelected ? "#22d3ee" : "rgba(255,255,255,.1)"}`, background: isSelected ? "rgba(34,211,238,.1)" : "transparent", cursor: "pointer" }}>
+                      <img src={asString(choice.thumbnail || choice.url)} alt={asString(choice.alt)} style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: 7, display: "block" }} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

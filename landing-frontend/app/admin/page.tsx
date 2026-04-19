@@ -1,154 +1,115 @@
 "use client";
-
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "../components/Header";
 import { parseApiResponse } from "../../lib/api";
 
-type PageRecord = {
-  id: string;
-  title: string;
-  created_at?: string;
-  custom_domain?: string;
-  domain_status?: string;
-};
+type PageRecord = { id: string; title: string; created_at?: string; custom_domain?: string; domain_status?: string };
 
 export default function Admin() {
   const [pages, setPages] = useState<PageRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
+  function loadPages() {
     const token = localStorage.getItem("token");
-
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}my-pages/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => parseApiResponse<PageRecord[] | { pages: PageRecord[] }>(res))
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setPages(data);
-          return;
-        }
-        setPages(Array.isArray(data.pages) ? data.pages : []);
-      })
-      .catch((error) => {
-        console.error(error);
-        setPages([]);
-      })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}my-pages/`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => parseApiResponse<PageRecord[] | { pages: PageRecord[] }>(r))
+      .then(data => setPages(Array.isArray(data) ? data : Array.isArray((data as any).pages) ? (data as any).pages : []))
+      .catch(() => setPages([]))
       .finally(() => setLoading(false));
-  }, []);
+  }
+  useEffect(loadPages, []);
 
-  const stats = useMemo(
-    () => ({
-      total: pages.length,
-      withDomain: pages.filter((page) => page.custom_domain).length,
-      hostedPaths: pages.filter((page) => !page.custom_domain).length,
-    }),
-    [pages]
-  );
+  async function deletePage(id: string) {
+    if (!confirm("Delete this page and all its data?")) return;
+    setDeletingId(id);
+    const token = localStorage.getItem("token");
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}page/${id}/delete/`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    setPages(p => p.filter(pg => pg.id !== id));
+    setDeletingId(null);
+  }
+
+  const stats = useMemo(() => ({ total: pages.length, withDomain: pages.filter(p => p.custom_domain).length, hostedPaths: pages.filter(p => !p.custom_domain).length }), [pages]);
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#060816,#091127_55%,#040611_100%)] text-white">
+    <main style={{ minHeight: "100vh", background: "linear-gradient(180deg,#060816,#091127 55%,#040611)", color: "white", fontFamily: "'Inter',sans-serif" }}>
       <Header />
-
-      <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
-        <section className="rounded-[36px] border border-white/10 bg-[linear-gradient(145deg,rgba(10,16,34,0.94),rgba(15,23,42,0.92))] p-8 shadow-[0_30px_100px_rgba(2,6,23,0.45)]">
-          <div className="flex flex-wrap items-end justify-between gap-6">
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "clamp(20px,5vw,40px) clamp(16px,4vw,32px)" }}>
+        {/* Hero card */}
+        <section style={{ borderRadius: 36, border: "1px solid rgba(255,255,255,.1)", background: "linear-gradient(145deg,rgba(10,16,34,.94),rgba(15,23,42,.92))", padding: "clamp(24px,4vw,40px)", marginBottom: 32, boxShadow: "0 30px 100px rgba(2,6,23,.45)" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 20, marginBottom: 24 }}>
             <div>
-              <div className="text-xs uppercase tracking-[0.28em] text-cyan-200">Dashboard</div>
-              <h1 className="mt-3 font-display text-4xl leading-tight text-white">
-                Manage your landing pages like a real product workspace.
-              </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-                Review active pages, jump back into editing, track domain setup, and keep your launch queue organized.
-              </p>
+              <div style={{ fontSize: 11, letterSpacing: ".28em", textTransform: "uppercase", color: "#67e8f9", marginBottom: 8 }}>Dashboard</div>
+              <h1 style={{ fontSize: "clamp(22px,4vw,36px)", fontWeight: 800, margin: 0, lineHeight: 1.15 }}>Your Landing Pages</h1>
+              <p style={{ color: "#94a3b8", fontSize: 15, marginTop: 8, maxWidth: 520 }}>Edit pages, manage forms, track leads, and publish your sites.</p>
             </div>
-            <button
-              onClick={() => router.push("/")}
-              className="rounded-full bg-[linear-gradient(135deg,#22d3ee,#7c3aed,#f43f5e)] px-5 py-3 text-sm font-semibold text-white"
-            >
-              Create New Page
+            <button onClick={() => router.push("/")} style={{ padding: "12px 24px", borderRadius: 100, fontWeight: 700, fontSize: 14, cursor: "pointer", border: "none", background: "linear-gradient(135deg,#22d3ee,#7c3aed,#f43f5e)", color: "white", flexShrink: 0 }}>
+              + Create New Page
             </button>
           </div>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <StatCard label="Total pages" value={String(stats.total)} tone="cyan" />
-            <StatCard label="Domains added" value={String(stats.withDomain)} tone="pink" />
-            <StatCard label="Hosted paths" value={String(stats.hostedPaths)} tone="emerald" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+            {[["Total pages", String(stats.total), "from-cyan-400/20"], ["Domains added", String(stats.withDomain), "from-pink-400/20"], ["Hosted paths", String(stats.hostedPaths), "from-emerald-400/20"]].map(([label, value]) => (
+              <div key={label} style={{ borderRadius: 20, border: "1px solid rgba(255,255,255,.08)", background: "rgba(255,255,255,.04)", padding: "clamp(14px,3vw,24px)" }}>
+                <div style={{ fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#64748b" }}>{label}</div>
+                <div style={{ fontSize: "clamp(22px,4vw,32px)", fontWeight: 800, marginTop: 8 }}>{value}</div>
+              </div>
+            ))}
           </div>
         </section>
 
-        <section className="mt-8">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold text-white">Your pages</h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Open the editor, preview the live page, or continue domain setup.
-              </p>
+        {/* Pages list */}
+        <section>
+          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20 }}>Your pages</h2>
+          {loading && <div style={{ textAlign: "center", padding: 48, color: "#64748b" }}>Loading pages…</div>}
+          {!loading && pages.length === 0 && (
+            <div style={{ borderRadius: 28, border: "1px solid rgba(255,255,255,.08)", background: "rgba(255,255,255,.02)", padding: 48, textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>No pages yet</div>
+              <div style={{ color: "#64748b", marginTop: 8, fontSize: 14 }}>Generate your first landing page to get started.</div>
             </div>
-          </div>
-
-          {loading ? (
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.03] px-6 py-12 text-center text-slate-400">
-              Loading pages...
-            </div>
-          ) : null}
-
-          {!loading && pages.length === 0 ? (
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.03] px-6 py-12 text-center">
-              <div className="text-xl font-semibold text-white">No pages yet</div>
-              <div className="mt-2 text-sm text-slate-400">
-                Generate your first landing page and it will show up here.
-              </div>
-            </div>
-          ) : null}
-
-          <div className="grid gap-5 lg:grid-cols-2">
-            {pages.map((page) => (
-              <article
-                key={page.id}
-                className="rounded-[30px] border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6 shadow-[0_20px_70px_rgba(2,6,23,0.28)]"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.26em] text-slate-500">Landing page</div>
-                    <h3 className="mt-2 text-2xl font-semibold text-white">{page.title || "Untitled Page"}</h3>
-                    <p className="mt-3 text-sm text-slate-400">
-                      {page.created_at ? new Date(page.created_at).toLocaleDateString() : "Draft"}
-                    </p>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(clamp(280px,40vw,500px),1fr))", gap: 20 }}>
+            {pages.map(page => (
+              <article key={page.id} style={{ borderRadius: 28, border: "1px solid rgba(255,255,255,.1)", background: "linear-gradient(145deg,rgba(255,255,255,.05),rgba(255,255,255,.02))", padding: "clamp(16px,3vw,28px)", boxShadow: "0 20px 70px rgba(2,6,23,.28)" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, letterSpacing: ".24em", textTransform: "uppercase", color: "#64748b" }}>Landing page</div>
+                    <h3 style={{ fontSize: "clamp(16px,2.5vw,22px)", fontWeight: 700, margin: "6px 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{page.title || "Untitled"}</h3>
+                    <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>{page.created_at ? new Date(page.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Draft"}</p>
                   </div>
-                  <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-cyan-100">
-                    {page.custom_domain ? "Custom domain" : "Hosted path"}
+                  <span style={{ borderRadius: 100, border: "1px solid rgba(34,211,238,.2)", background: "rgba(34,211,238,.08)", padding: "4px 12px", fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "#67e8f9", flexShrink: 0 }}>
+                    {page.custom_domain ? "Custom domain" : "Hosted"}
                   </span>
                 </div>
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  <InfoCard
-                    label="Live path"
-                    value={`/site/${page.id}`}
-                  />
-                  <InfoCard
-                    label="Domain"
-                    value={page.custom_domain || "Not attached yet"}
-                    status={page.domain_status || "not_connected"}
-                  />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                  <div style={{ borderRadius: 16, border: "1px solid rgba(255,255,255,.07)", background: "rgba(255,255,255,.02)", padding: "12px 14px" }}>
+                    <div style={{ fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "#64748b", marginBottom: 6 }}>Live path</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>/site/{page.id.slice(0, 8)}…</div>
+                  </div>
+                  <div style={{ borderRadius: 16, border: "1px solid rgba(255,255,255,.07)", background: "rgba(255,255,255,.02)", padding: "12px 14px" }}>
+                    <div style={{ fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "#64748b", marginBottom: 6 }}>Domain</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{page.custom_domain || "Not attached"}</div>
+                  </div>
                 </div>
 
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <button
-                    onClick={() => router.push(`/edit/${page.id}`)}
-                    className="rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-slate-950"
-                  >
-                    Open Editor
+                {/* Action buttons - all 5 */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <button onClick={() => router.push(`/edit/${page.id}`)} style={{ padding: "9px 18px", borderRadius: 100, fontWeight: 700, fontSize: 13, cursor: "pointer", border: "none", background: "white", color: "#0f172a", flexShrink: 0 }}>
+                    ✏️ Edit
                   </button>
-                  <button
-                    onClick={() => router.push(`/site/${page.id}`)}
-                    className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white"
-                  >
-                    Preview Site
+                  <button onClick={() => router.push(`/site/${page.id}`)} style={{ padding: "9px 18px", borderRadius: 100, fontWeight: 600, fontSize: 13, cursor: "pointer", border: "1px solid rgba(255,255,255,.15)", background: "rgba(255,255,255,.04)", color: "white", flexShrink: 0 }}>
+                    👁 Preview
+                  </button>
+                  <button onClick={() => router.push(`/form/${page.id}`)} style={{ padding: "9px 18px", borderRadius: 100, fontWeight: 600, fontSize: 13, cursor: "pointer", border: "1px solid rgba(34,211,238,.25)", background: "rgba(34,211,238,.07)", color: "#22d3ee", flexShrink: 0 }}>
+                    📋 Form Builder
+                  </button>
+                  <button onClick={() => router.push(`/entries/${page.id}`)} style={{ padding: "9px 18px", borderRadius: 100, fontWeight: 600, fontSize: 13, cursor: "pointer", border: "1px solid rgba(168,85,247,.25)", background: "rgba(168,85,247,.07)", color: "#c084fc", flexShrink: 0 }}>
+                    📊 Entries
+                  </button>
+                  <button onClick={() => deletePage(page.id)} disabled={deletingId === page.id} style={{ padding: "9px 18px", borderRadius: 100, fontWeight: 600, fontSize: 13, cursor: "pointer", border: "1px solid rgba(239,68,68,.25)", background: "rgba(239,68,68,.07)", color: "#f87171", flexShrink: 0 }}>
+                    {deletingId === page.id ? "…" : "🗑 Delete"}
                   </button>
                 </div>
               </article>
@@ -157,50 +118,5 @@ export default function Admin() {
         </section>
       </div>
     </main>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: "cyan" | "pink" | "emerald";
-}) {
-  const toneMap = {
-    cyan: "from-cyan-400/20 to-cyan-300/5 text-cyan-100",
-    pink: "from-pink-400/20 to-pink-300/5 text-pink-100",
-    emerald: "from-emerald-400/20 to-emerald-300/5 text-emerald-100",
-  };
-
-  return (
-    <div className={`rounded-[24px] border border-white/10 bg-gradient-to-br ${toneMap[tone]} p-5`}>
-      <div className="text-xs uppercase tracking-[0.22em] text-slate-400">{label}</div>
-      <div className="mt-3 text-3xl font-semibold text-white">{value}</div>
-    </div>
-  );
-}
-
-function InfoCard({
-  label,
-  value,
-  status,
-}: {
-  label: string;
-  value: string;
-  status?: string;
-}) {
-  return (
-    <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
-      <div className="text-xs uppercase tracking-[0.22em] text-slate-500">{label}</div>
-      <div className="mt-3 text-sm font-medium text-white">{value}</div>
-      {status ? (
-        <div className="mt-3 inline-flex rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[11px] uppercase tracking-[0.16em] text-amber-100">
-          {status}
-        </div>
-      ) : null}
-    </div>
   );
 }
