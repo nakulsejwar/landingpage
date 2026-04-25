@@ -23,7 +23,17 @@ def safe_json_load(raw: str):
 
     json_str = match.group(0)
 
-    return json.loads(json_str)
+    # 🔥 Fix common LLM JSON issues
+    json_str = json_str.replace("'", '"')  # single → double quotes
+    json_str = re.sub(r",\s*}", "}", json_str)  # remove trailing commas in objects
+    json_str = re.sub(r",\s*]", "]", json_str)  # remove trailing commas in arrays
+
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        print("❌ RAW LLM OUTPUT:\n", raw)
+        print("❌ CLEANED JSON:\n", json_str)
+        raise e
 
 
 def strip_return_component(code: str):
