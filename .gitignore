@@ -2,3 +2,5 @@
 landing_backend/.env
 *.pyc
 landing_backend/.env
+landing_backend/landing_ai/__pycache__/utils.cpython-311.pyc
+landing_backend/.env.local

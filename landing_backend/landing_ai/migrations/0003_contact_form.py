@@ -24,8 +24,16 @@ class Migration(migrations.Migration):
                 ('background_color', models.CharField(default='transparent', max_length=20)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('page', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='contact_form', to='landing_ai.landingpage')),
+                ('page', models.OneToOneField(
+                    on_delete=django.db.models.deletion.CASCADE,
+                    related_name='contact_form',
+                    to='landing_ai.landingpage',
+                )),
             ],
+            options={
+                'verbose_name': 'Contact Form Config',
+                'verbose_name_plural': 'Contact Form Configs',
+            },
         ),
         migrations.CreateModel(
             name='ContactFormEntry',
@@ -35,9 +43,15 @@ class Migration(migrations.Migration):
                 ('submitted_at', models.DateTimeField(auto_now_add=True)),
                 ('ip_address', models.GenericIPAddressField(blank=True, null=True)),
                 ('user_agent', models.TextField(blank=True)),
-                ('form', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='entries', to='landing_ai.contactformconfig')),
+                ('form', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE,
+                    related_name='entries',
+                    to='landing_ai.contactformconfig',
+                )),
             ],
             options={
+                'verbose_name': 'Contact Form Entry',
+                'verbose_name_plural': 'Contact Form Entries',
                 'ordering': ['-submitted_at'],
             },
         ),

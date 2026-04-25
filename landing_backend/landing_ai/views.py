@@ -20,7 +20,8 @@ from .asset_services import (
 )
 from .authentication import create_access_token
 from .gemini_client import get_llm
-from .models import LandingPage, LandingSection
+from .models import LandingPage, LandingSection, ContactFormConfig, ContactFormEntry
+from django.core.mail import send_mail
 from .prompts import DESIGN_SYSTEM_PROMPT, LANDING_PAGE_PROMPT, REGENERATE_SECTION_PROMPT
 from .utils import safe_json_load
 
@@ -395,6 +396,10 @@ class GenerateLanding(APIView):
             )
             page_content = safe_json_load(llm.generate_content(landing_prompt).text)
 
+            # Force random layout variants — override whatever the LLM chose
+            visual_style = (design_system.get("theme") or {}).get("visual_style", "")
+            page_content = inject_layouts(page_content or {}, visual_style)
+
             page = LandingPage.objects.create(
                 user=request.user,
                 title=design_system.get("page_title") or design_system.get("brand_name") or "AI Generated Page",
@@ -713,10 +718,6 @@ class LandingImageUpload(APIView):
 
 
 # ── Contact Form Views ────────────────────────────────────────────────────────
-from .models import ContactFormConfig, ContactFormEntry
-from django.core.mail import send_mail
-from django.conf import settings as django_settings
-import json as json_lib
 
 
 class ContactFormConfigView(APIView):
@@ -824,7 +825,7 @@ class ContactFormSubmitView(APIView):
                 send_mail(
                     subject=f"[{page.title}] New Form Submission",
                     message=f"New submission from your landing page '{page.title}':\n\n{rows}\n\nSubmitted at: {entry.submitted_at}",
-                    from_email=django_settings.DEFAULT_FROM_EMAIL or "noreply@example.com",
+                    from_email=settings.DEFAULT_FROM_EMAIL or "noreply@example.com",
                     recipient_list=[form_config.admin_email],
                     fail_silently=True,
                 )
@@ -882,3 +883,83 @@ class ContactFormEntriesView(APIView):
             return Response({"deleted": True})
         except (LandingPage.DoesNotExist, ContactFormConfig.DoesNotExist):
             return Response({"error": "Not found"}, status=404)
+
+
+# ── Layout randomizer — overrides whatever the LLM picked ────────────────────
+import random as _random
+
+# Every section has pools of layout variants. We rotate through them randomly
+# so no two generated pages ever share the same combination.
+LAYOUT_POOLS = {
+    "header": [
+        "glass","pill","editorial","neon","brutalist","minimal","announcement"
+    ],
+    "hero": [
+        "split-right","centered","full-bg","stacked-showcase","big-text",
+        "magazine","brut-banner","neon-frame","diagonal",
+    ],
+    "features": [
+        "cards-3","cards-2","cards-4","glass-float","spotlight-first","alternating",
+        "numbered-list","icon-row","bento","feature-table","ticker","terminal",
+        "accordion-features","tab-switcher","numbered-magazine","half-screen",
+        "stripe-rows","stat-forward","card-image-top","sticky-scroll",
+        "comparison","neon-cards","brutalist-grid","editorial-features",
+        "checklist-cols","icon-dominant",
+    ],
+    "about": [
+        "split-media","timeline","stats-left","full-width-card","centered-prose",
+        "dark-feature-card","manifesto","mosaic","counter-showcase","full-bleed","story-card",
+    ],
+    "testimonials": [
+        "grid","marquee","spotlight","stacked","masonry","quote-large",
+        "side-by-side","logo-wall","split-panel",
+    ],
+    "faq": [
+        "accordion","two-column","side-question","numbered-accordion",
+        "minimal-list","cards-grid",
+    ],
+    "contact": [
+        "split","centered","minimal-cta","full-width-dark","newsletter",
+        "social-cta","newspaper","form-embed",
+    ],
+}
+
+# Visual styles that should be excluded from certain hero layouts
+STYLE_HERO_EXCLUSIONS = {
+    "minimal light": ["neon-frame","brut-banner","neon-cards"],
+    "brutalist raw": ["neon-frame","gradient-burst","centered-dark"],
+    "neon glow electric": ["minimal-list","story-card","centered-prose"],
+}
+
+
+def pick_layouts(visual_style: str) -> dict:
+    """Return a dict of randomly chosen layout variants — one per section."""
+    excl = STYLE_HERO_EXCLUSIONS.get(visual_style, [])
+    hero_pool = [v for v in LAYOUT_POOLS["hero"] if v not in excl]
+    return {
+        "header": _random.choice(LAYOUT_POOLS["header"]),
+        "hero": _random.choice(hero_pool),
+        "features": _random.choice(LAYOUT_POOLS["features"]),
+        "about": _random.choice(LAYOUT_POOLS["about"]),
+        "testimonials": _random.choice(LAYOUT_POOLS["testimonials"]),
+        "faq": _random.choice(LAYOUT_POOLS["faq"]),
+        "contact": _random.choice(LAYOUT_POOLS["contact"]),
+    }
+
+
+def inject_layouts(page_content: dict, visual_style: str) -> dict:
+    """Override layout_variant and nav_variant in page_content with random picks."""
+    layouts = pick_layouts(visual_style)
+    result = dict(page_content)
+
+    # header
+    if isinstance(result.get("header"), dict):
+        result["header"] = dict(result["header"])
+        result["header"]["nav_variant"] = layouts["header"]
+
+    for section in ("hero", "features", "about", "testimonials", "faq", "contact"):
+        if isinstance(result.get(section), dict):
+            result[section] = dict(result[section])
+            result[section]["layout_variant"] = layouts[section]
+
+    return result

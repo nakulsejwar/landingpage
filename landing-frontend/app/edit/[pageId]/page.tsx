@@ -633,6 +633,25 @@ export default function EditPage() {
                     </div>
 
                     <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+                      <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Contact Form</div>
+                      <p className="mt-2 text-sm text-slate-400">Build a lead capture form that pops up when visitors click your CTA buttons.</p>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          onClick={() => router.push(`/form/${pageId}`)}
+                          className="rounded-full bg-cyan-400/10 border border-cyan-400/30 px-4 py-2 text-sm font-semibold text-cyan-200"
+                        >
+                          📋 Form Builder
+                        </button>
+                        <button
+                          onClick={() => router.push(`/entries/${pageId}`)}
+                          className="rounded-full bg-purple-400/10 border border-purple-400/30 px-4 py-2 text-sm font-semibold text-purple-200"
+                        >
+                          📊 View Entries
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
                       <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Theme</div>
                       <div className="mt-4 space-y-4">
                         <EditorColorInput
