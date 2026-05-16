@@ -184,6 +184,11 @@ COPY RULES:
   grid layers message bell search dollar box tool smile flash layout
 - testimonials: 6 items, specific quotes, company names, diverse names
 - image_query: 20+ words, ultra-specific editorial photo description
+
+LIMITS:
+- Keep all text fields to 200 characters max
+- Keep all items in arrays to 4 items max
+- Keep all sections under 500 tokens total
 """
 
 
