@@ -387,14 +387,26 @@ class GenerateLanding(APIView):
                 user_prompt=user_prompt,
                 generation_options=generation_options,
             )
-            design_system = safe_json_load(llm.generate_content(design_prompt).text)
+            design_system_response = llm.generate_content(design_prompt).text
+            try:
+                design_system = safe_json_load(design_system_response)
+            except Exception as e:
+                # Log the raw response for debugging
+                print(f"Design system raw response: {design_system_response}")
+                raise e
 
             landing_prompt = LANDING_PAGE_PROMPT.format(
                 user_prompt=user_prompt,
                 design_system=design_system,
                 generation_options=generation_options,
             )
-            page_content = safe_json_load(llm.generate_content(landing_prompt).text)
+            page_content_response = llm.generate_content(landing_prompt).text
+            try:
+                page_content = safe_json_load(page_content_response)
+            except Exception as e:
+                # Log the raw response for debugging
+                print(f"Page content raw response: {page_content_response}")
+                raise e
 
             # Force random layout variants — override whatever the LLM chose
             visual_style = (design_system.get("theme") or {}).get("visual_style", "")
