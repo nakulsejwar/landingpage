@@ -27,13 +27,20 @@ def safe_json_load(raw: str):
     json_str = json_str.replace("'", '"')  # single → double quotes
     json_str = re.sub(r",\s*}", "}", json_str)  # remove trailing commas in objects
     json_str = re.sub(r",\s*]", "]", json_str)  # remove trailing commas in arrays
-
+    
+    # Handle case where we have a malformed JSON due to LLM issues
     try:
         return json.loads(json_str)
     except json.JSONDecodeError as e:
-        print("❌ RAW LLM OUTPUT:\n", raw)
-        print("❌ CLEANED JSON:\n", json_str)
-        raise e
+        # If we still have issues, try to be more aggressive in cleaning
+        # Remove any text that might come after the JSON
+        json_str = json_str.split('}', 1)[0] + '}'  # Ensure proper closing
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            print("❌ RAW LLM OUTPUT:\n", raw)
+            print("❌ CLEANED JSON:\n", json_str)
+            raise e
 
 
 def strip_return_component(code: str):
