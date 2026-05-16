@@ -388,11 +388,30 @@ class GenerateLanding(APIView):
                 generation_options=generation_options,
             )
             design_system_response = llm.generate_content(design_prompt).text
+            # Check if we got an error response from the API
+            if design_system_response.startswith("Error:"):
+                return Response({"error": f"AI service error: {design_system_response}"}, status=500)
             try:
                 design_system = safe_json_load(design_system_response)
             except Exception as e:
                 # Log the raw response for debugging
                 print(f"Design system raw response: {design_system_response}")
+                raise e
+
+            landing_prompt = LANDING_PAGE_PROMPT.format(
+                user_prompt=user_prompt,
+                design_system=design_system,
+                generation_options=generation_options,
+            )
+            page_content_response = llm.generate_content(landing_prompt).text
+            # Check if we got an error response from the API
+            if page_content_response.startswith("Error:"):
+                return Response({"error": f"AI service error: {page_content_response}"}, status=500)
+            try:
+                page_content = safe_json_load(page_content_response)
+            except Exception as e:
+                # Log the raw response for debugging
+                print(f"Page content raw response: {page_content_response}")
                 raise e
 
             landing_prompt = LANDING_PAGE_PROMPT.format(
