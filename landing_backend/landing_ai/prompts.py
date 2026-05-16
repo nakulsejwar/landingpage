@@ -113,8 +113,6 @@ Return STRICT JSON only — no markdown:
       {{"name":"","role":"","company":"","quote":""}},
       {{"name":"","role":"","company":"","quote":""}},
       {{"name":"","role":"","company":"","quote":""}},
-      {{"name":"","role":"","company":"","quote":""}},
-      {{"name":"","role":"","company":"","quote":""}},
       {{"name":"","role":"","company":"","quote":""}}
     ]
   }},
@@ -124,7 +122,6 @@ Return STRICT JSON only — no markdown:
     "title": "",
     "description": "",
     "items": [
-      {{"question":"","answer":""}},
       {{"question":"","answer":""}},
       {{"question":"","answer":""}},
       {{"question":"","answer":""}},
@@ -182,7 +179,7 @@ COPY RULES:
 - icons: use exact keywords — zap shield chart trending users target rocket globe cpu code terminal
   database cloud mail heart star check bulb settings eye refresh link package activity award map
   grid layers message bell search dollar box tool smile flash layout
-- testimonials: 6 items, specific quotes, company names, diverse names
+- testimonials: 4 items, specific quotes, company names, diverse names
 - image_query: 20+ words, ultra-specific editorial photo description
 
 LIMITS:

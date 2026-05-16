@@ -19,7 +19,7 @@ from .asset_services import (
     search_pexels_images,
 )
 from .authentication import create_access_token
-from .gemini_client import get_llm
+from .gemini_client import DESIGN_MAX_TOKENS, get_llm
 from .models import LandingPage, LandingSection, ContactFormConfig, ContactFormEntry
 from django.core.mail import send_mail
 from .prompts import DESIGN_SYSTEM_PROMPT, LANDING_PAGE_PROMPT, REGENERATE_SECTION_PROMPT
@@ -387,7 +387,10 @@ class GenerateLanding(APIView):
                 user_prompt=user_prompt,
                 generation_options=generation_options,
             )
-            design_system_response = llm.generate_content(design_prompt).text
+            design_system_response = llm.generate_content(
+                design_prompt,
+                max_tokens=DESIGN_MAX_TOKENS,
+            ).text
             # Check if we got an error response from the API
             if design_system_response.startswith("Error:"):
                 return Response({"error": f"AI service error: {design_system_response}"}, status=500)
@@ -407,19 +410,6 @@ class GenerateLanding(APIView):
             # Check if we got an error response from the API
             if page_content_response.startswith("Error:"):
                 return Response({"error": f"AI service error: {page_content_response}"}, status=500)
-            try:
-                page_content = safe_json_load(page_content_response)
-            except Exception as e:
-                # Log the raw response for debugging
-                print(f"Page content raw response: {page_content_response}")
-                raise e
-
-            landing_prompt = LANDING_PAGE_PROMPT.format(
-                user_prompt=user_prompt,
-                design_system=design_system,
-                generation_options=generation_options,
-            )
-            page_content_response = llm.generate_content(landing_prompt).text
             try:
                 page_content = safe_json_load(page_content_response)
             except Exception as e:
@@ -495,6 +485,9 @@ class RegenerateSection(APIView):
 
         llm = get_llm()
         raw_response = llm.generate_content(prompt).text
+        if raw_response.startswith("Error:"):
+            return Response({"error": f"AI service error: {raw_response}"}, status=500)
+
         data = safe_json_load(raw_response)
 
         # If AI returned custom_html, preserve it in the data
